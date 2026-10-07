@@ -2061,8 +2061,21 @@ h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
       document.documentElement.setAttribute('lang', lang);
     }
     buttons.forEach(function (b) {
-      b.addEventListener('click', function () { setLang(b.getAttribute('data-lang-btn')); });
+      b.addEventListener('click', function () {
+        var lang = b.getAttribute('data-lang-btn');
+        setLang(lang);
+        try { localStorage.setItem('lang', lang); } catch (e) {}
+      });
     });
+
+    // Initial language: visitor's saved choice, else browser's preferred language, else English.
+    var initial = null;
+    try { initial = localStorage.getItem('lang'); } catch (e) {}
+    if (initial !== 'en' && initial !== 'de') {
+      var prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+      initial = /^de\b/i.test(prefs[0] || '') ? 'de' : 'en';
+    }
+    if (initial !== 'en') setLang(initial);
 
     if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       var io = new IntersectionObserver(function (entries) {
