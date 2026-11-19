@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elsa Fan — Project Islands</title>
+<meta name="description" content="An interactive 3D map of Elsa Fan's academic projects: six islands, one per theme — communication, brand strategy, digital, employer branding, research, and intercultural work.">
+<meta property="og:title" content="Elsa Fan — Project Islands">
+<meta property="og:description" content="Explore my projects as six floating islands, one per theme.">
+<meta property="og:image" content="https://elsa0214.github.io/elsa-portfolio/images/portrait-of-elsa-fan.jpg">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:300 700;font-display:swap;src:url(fonts/font-1.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 700;font-display:swap;src:url(fonts/font-3.woff2) format('woff2');}
+
+/* 1. TOKENS — same palette as the main portfolio */
+:root{
+  --navy:#132342;
+  --brass:#a9812e;
+  --brass-light:#c9a24b;
+  --bg:#f6f2e9;
+  --bg-card:#fbf8f2;
+  --ink:#292722;
+  --ink-soft:#5c5847;
+  --ink-faint:#8c8477;
+  --line:#dbd2bb;
+  --panel-bg:rgba(251,248,242,.97);
+  --glass:rgba(251,248,242,.86);
+  --focus:#132342;
+  --page-bg:#f6f2e9;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(19,35,66,.12);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --t:.45s;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;
+  --base-size:16px;
+  --line-height:1.6;
+}
+html.low-stim{--t:0s;--base-size:17.5px;--line-height:1.8;--shadow:0 2px 8px rgba(19,35,66,.10);}
+@media (prefers-reduced-motion:reduce){:root{--t:0s;}}
+
+/* 2. BASE */
+*{box-sizing:border-box;}
+html{font-size:var(--base-size);}
+html,body{margin:0;height:100%;}
+body{font-family:var(--sans);color:var(--ink);background:var(--page-bg);line-height:var(--line-height);overflow:hidden;-webkit-font-smoothing:antialiased;}
+body.text-mode{overflow:auto;}
+button{font:inherit;color:inherit;cursor:pointer;}
+a{color:var(--navy);}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:8px;}
+[hidden]{display:none !important;}
+.skip-link{position:fixed;top:10px;left:10px;z-index:100;transform:translateY(-160%);background:var(--navy);color:#fff;border:0;border-radius:10px;padding:.6rem 1rem;font-weight:600;}
+.skip-link:focus{transform:none;}
+
+/* 3. TOP BAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem 1rem;padding:max(12px,env(safe-area-inset-top)) 16px 10px;pointer-events:none;}
+.topbar>*{pointer-events:auto;}
+.title-wrap{display:flex;align-items:center;gap:.6rem;background:var(--glass);padding:.4rem .5rem .4rem .5rem;border-radius:999px;box-shadow:var(--shadow);backdrop-filter:blur(6px);}
+.back-home{display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;font-size:.82rem;font-weight:600;color:var(--navy);padding:.35rem .75rem;border-radius:999px;border:1px solid var(--line);background:#fff;min-height:36px;}
+.back-home:hover{border-color:var(--brass);}
+.title{margin:0;font-family:var(--serif);font-weight:500;font-size:1.3rem;line-height:1.2;color:var(--navy);padding-right:.5rem;}
+.title em{font-style:normal;color:var(--brass);}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;}
+.pill{display:inline-flex;align-items:center;gap:.45rem;min-height:40px;padding:.3rem .9rem;border-radius:999px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(6px);font-weight:600;font-size:.85rem;box-shadow:var(--shadow);transition:background var(--t) var(--ease);}
+.pill:hover{background:#fff;}
+.pill[aria-pressed="true"]{border-color:var(--navy);}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--glass);box-shadow:var(--shadow);}
+.lang button{border:0;background:none;padding:.3rem .75rem;min-height:40px;font-size:.82rem;font-weight:600;color:var(--ink-soft);}
+.lang button[aria-pressed="true"]{background:var(--navy);color:#fff;}
+.switch-track{position:relative;width:34px;height:20px;border-radius:999px;background:#d6cfbd;flex:none;transition:background var(--t) var(--ease);}
+.switch-track::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform var(--t) var(--ease);}
+[aria-checked="true"] .switch-track{background:var(--navy);}
+[aria-checked="true"] .switch-track::after{transform:translateX(14px);}
+
+/* 4. SCENE + LABELS */
+#scene{position:fixed;inset:0;z-index:1;}
+#scene canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;}
+html.low-stim #scene canvas{filter:saturate(.6);}
+body.text-mode #scene,body.text-mode #labels{display:none;}
+#labels{position:fixed;inset:0;z-index:5;pointer-events:none;}
+.island-label{position:absolute;left:0;top:0;display:flex;align-items:center;gap:.45rem;padding:.2rem .8rem .2rem .2rem;border-radius:999px;border:1.5px solid transparent;background:rgba(251,248,242,.94);box-shadow:0 4px 14px rgba(19,35,66,.14);font-weight:600;font-size:.85rem;color:var(--navy);white-space:nowrap;pointer-events:auto;will-change:transform;transition:border-color var(--t) var(--ease);}
+.badge{display:grid;place-items:center;width:1.8rem;height:1.8rem;border-radius:50%;font-family:var(--serif);font-weight:600;font-size:.95rem;color:var(--navy);flex:none;}
+.island-label.is-hot{border-color:var(--brass);}
+
+/* 5. HINT + CREDIT */
+.hint{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));z-index:25;transform:translateX(-50%);display:flex;align-items:center;gap:.8rem;max-width:calc(100% - 32px);padding:.55rem .6rem .55rem 1.1rem;border-radius:999px;background:var(--panel-bg);box-shadow:var(--shadow);font-weight:500;font-size:.9rem;transition:opacity 1.2s var(--ease);}
+.hint.fade{opacity:0;}
+.hint button{border:0;border-radius:999px;padding:.35rem .9rem;background:var(--navy);color:#fff;font-weight:600;min-height:36px;}
+body.text-mode .hint,body.panel-open .hint{display:none;}
+.credit{position:fixed;left:16px;bottom:max(12px,env(safe-area-inset-bottom));z-index:6;font-size:.72rem;color:var(--ink-faint);background:var(--glass);padding:.25rem .7rem;border-radius:999px;}
+body.panel-open .credit,body.text-mode .credit{display:none;}
+
+/* 6. PANEL */
+.panel{position:fixed;z-index:40;top:80px;right:16px;bottom:16px;width:min(470px,44vw);display:flex;flex-direction:column;background:var(--panel-bg);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);visibility:hidden;transform:translateX(calc(100% + 24px));transition:transform var(--t) var(--ease),visibility 0s linear var(--t);}
+.panel.open{visibility:visible;transform:none;transition:transform var(--t) var(--ease),visibility 0s;}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;padding:1.1rem 1.2rem .9rem;border-bottom:1px solid var(--line);}
+.chip{display:inline-block;padding:.1rem .65rem;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);}
+.panel h2{margin:.4rem 0 0;font-family:var(--serif);font-weight:500;font-size:1.4rem;line-height:1.25;color:var(--navy);}
+.panel h2:focus{outline:none;}
+.close-btn{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:.35rem .85rem;min-height:40px;font-weight:600;font-size:.82rem;}
+.close-btn:hover{border-color:var(--brass);}
+.panel-body{overflow-y:auto;padding:1rem 1.2rem 1.4rem;overscroll-behavior:contain;}
+.intro{margin:0 0 1rem;color:var(--ink-soft);}
+.proj{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:.9rem;}
+.proj img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;object-position:50% 30%;background:#eee6d1;}
+.proj-body{padding:.8rem .95rem .9rem;}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--brass);}
+.proj h3{margin:.2rem 0 .15rem;font-family:var(--serif);font-weight:500;font-size:1.08rem;line-height:1.3;color:var(--navy);}
+.proj .sub{margin:0;font-size:.88rem;color:var(--ink-soft);}
+.proj details{margin-top:.55rem;font-size:.86rem;}
+.proj summary{cursor:pointer;font-weight:600;color:var(--navy);font-size:.82rem;}
+.proj ul{margin:.45rem 0 0;padding-left:1.1rem;color:var(--ink);}
+.proj li{margin-bottom:.3rem;}
+.panel-foot{margin-top:.4rem;font-size:.85rem;}
+
+/* 7. TEXT VIEW */
+.text-menu{display:none;}
+body.text-mode .text-menu{display:block;position:relative;z-index:10;max-width:620px;margin:0 auto;padding:120px 16px 40px;}
+body.text-mode.panel-open .text-menu{margin:0 0 0 max(16px,calc((100vw - 470px - 620px)/2 - 20px));}
+.text-menu h2{margin:0 0 .4rem;font-family:var(--serif);font-weight:500;font-size:1.5rem;color:var(--navy);}
+.text-menu p{color:var(--ink-soft);}
+.text-menu ul{list-style:none;padding:0;margin:1rem 0 0;display:grid;gap:.6rem;}
+.island-item{width:100%;display:flex;align-items:center;gap:.8rem;text-align:left;padding:.8rem 1rem;border-radius:12px;border:1px solid var(--line);background:var(--bg-card);font-weight:600;color:var(--navy);}
+.island-item:hover{border-color:var(--brass);}
+.island-item small{display:block;font-weight:400;color:var(--ink-soft);font-size:.85rem;}
+.notice{padding:.8rem 1rem;border-radius:12px;background:#f3e8cf;color:#6d5418;font-weight:500;margin-bottom:1rem;}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:2;color:var(--ink-soft);font-weight:500;pointer-events:none;}
+
+/* 8. RESPONSIVE */
+@media (max-width:819px){
+  .title{font-size:1.05rem;}
+  .pill{font-size:.78rem;padding:.25rem .7rem;}
+  .panel{top:auto;left:0;right:0;bottom:0;width:auto;height:60vh;height:60dvh;border-radius:var(--radius) var(--radius) 0 0;transform:translateY(calc(100% + 24px));padding-bottom:env(safe-area-inset-bottom);}
+  body.text-mode.panel-open .text-menu{margin:0 auto;padding-bottom:64vh;}
+  .hint{border-radius:16px;font-size:.85rem;}
+  .credit{display:none;}
+}
+@media (max-width:520px){
+  .lbl-text{display:none;}
+  .island-label{padding:.2rem;}
+  .title-wrap .title{display:none;}
+  .ls-text{display:none;}
+}
+</style>
+</head>
+
+<body>
+<button class="skip-link" id="skipLink" type="button" data-en="Skip 3D view: open the text list" data-de="3D-Ansicht überspringen: Textliste öffnen">Skip 3D view: open the text list</button>
+
+<header class="topbar">
+  <div class="title-wrap">
+    <a class="back-home" href="./" id="homeLink"><span aria-hidden="true">←</span><span data-en="Portfolio" data-de="Portfolio">Portfolio</span></a>
+    <h1 class="title" data-en-html="Project <em>Islands</em>" data-de-html="Projekt<em>inseln</em>">Project <em>Islands</em></h1>
+  </div>
+  <div class="controls" role="group" aria-label="Page settings">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="de" aria-pressed="false">DE</button>
+    </div>
+    <button id="lowStimBtn" class="pill" type="button" role="switch" aria-checked="false">
+      <span class="switch-track" aria-hidden="true"></span><span class="ls-text" data-en="Calm mode" data-de="Ruhiger Modus">Calm mode</span>
+    </button>
+    <button id="textModeBtn" class="pill" type="button" aria-pressed="false">List view</button>
+  </div>
+</header>
+
+<main>
+  <div id="scene" role="img" aria-label="3D view of six floating islands, one per project theme. Use the island buttons or the list view to explore."></div>
+  <div id="loading" class="loading" role="status" data-en="Floating the islands into place…" data-de="Die Inseln schweben herbei…">Floating the islands into place…</div>
+  <div id="labels" role="group" aria-label="Islands"></div>
+
+  <section id="textMenu" class="text-menu" aria-labelledby="textMenuTitle">
+    <p id="fallbackNotice" class="notice" role="status" hidden></p>
+    <h2 id="textMenuTitle" tabindex="-1" data-en="All islands" data-de="Alle Inseln">All islands</h2>
+    <p data-en="Each island groups my academic projects by theme. Choose one to see the projects." data-de="Jede Insel bündelt meine akademischen Projekte nach Thema. Wähle eine aus, um die Projekte zu sehen.">Each island groups my academic projects by theme. Choose one to see the projects.</p>
+    <ul id="textList"></ul>
+  </section>
+</main>
+
+<aside id="panel" class="panel" role="dialog" aria-modal="false" aria-labelledby="panelTitle">
+  <div class="panel-head">
+    <div>
+      <span id="panelChip" class="chip"></span>
+      <h2 id="panelTitle" tabindex="-1"></h2>
+    </div>
+    <button id="closeBtn" class="close-btn" type="button" data-en="← All islands" data-de="← Alle Inseln">← All islands</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<div id="hint" class="hint" role="status" hidden>
+  <span data-en="Drag to rotate, scroll to zoom, click an island to explore." data-de="Ziehen zum Drehen, scrollen zum Zoomen, Insel anklicken zum Erkunden.">Drag to rotate, scroll to zoom, click an island to explore.</span>
+  <button type="button" id="hintBtn" data-en="Got it" data-de="Alles klar">Got it</button>
+</div>
+
+<p class="credit" data-en="Built with AI assistance (Three.js) in my AI Applications course" data-de="Mit KI-Unterstützung (Three.js) im Kurs „AI Applications“ erstellt">Built with AI assistance (Three.js) in my AI Applications course</p>
+
+<script type="module">
+/* =======================================================================
+   ELSA FAN — PROJECT ISLANDS
+   A. Data (islands + projects, EN/DE)   B. Helpers + language
+   C. Panel   D. Calm mode, list view, hint   E. 3D scene (Three.js)
+   ======================================================================= */
+
+/* A. DATA ---------------------------------------------------------------- */
+const P = (img, w, h, tag, title, sub, bullets) => ({ img, w, h, tag, title, sub, bullets });
+const ISLANDS = [
+  {
+    n: '1', color: '#c4d0e3', deep: '#6f86ad', landmark: 'lighthouse',
+    title: { en: 'Corporate & Crisis Communication', de: 'Unternehmens- & Krisenkommunikation' },
+    intro: { en: 'How organizations talk to employees and the public, especially when things get difficult: crisis response, change communication, reputation, and internal trust.',
+             de: 'Wie Organisationen mit Mitarbeitenden und der Öffentlichkeit kommunizieren, gerade wenn es schwierig wird: Krisenreaktion, Change-Kommunikation, Reputation und internes Vertrauen.' },
+    projects: [
+      P('boeing-737-max-change-communication-title-slide.jpg', 1750, 984,
+        { en: 'Crisis Communication', de: 'Krisenkommunikation' },
+        { en: 'Boeing 737 MAX — Crisis Case Study', de: 'Boeing 737 MAX — Krisen-Fallstudie' },
+        { en: 'Business-impact analysis of a global aviation crisis', de: 'Geschäftsauswirkungsanalyse einer globalen Luftfahrtkrise' },
+        [{ en: "Authored the company-impact analysis, mapping crisis effects across Boeing's Business Model Canvas (partners, resources, customer relationships, cost structure/revenue) and stock performance.", de: 'Verfasste die Unternehmens-Impact-Analyse und ordnete die Krisenauswirkungen entlang von Boeings Business Model Canvas (Partner, Ressourcen, Kundenbeziehungen, Kostenstruktur/Umsatz) sowie der Aktienentwicklung ein.' },
+         { en: "Contributed to a team case study examining Boeing's crisis communication failures (silence strategy, weak leadership messaging, lack of empathy) through the lens of Situational Crisis Communication Theory.", de: 'Wirkte an einer Team-Fallstudie mit, die Boeings Fehler in der Krisenkommunikation (Schweige-Strategie, schwache Führungskommunikation, mangelnde Empathie) durch die Linse der Situational Crisis Communication Theory untersuchte.' }]),
+      P('novartis-change-communication-case-study-title-slide.jpg', 1750, 984,
+        { en: 'Change Communication', de: 'Change-Kommunikation' },
+        { en: 'Novartis — Change Communication Plan', de: 'Novartis — Change-Communication-Plan' },
+        { en: 'Internal communication plan for an office relocation', de: 'Interner Kommunikationsplan für einen Bürostandortwechsel' },
+        [{ en: 'Designed a change-communication plan with timeline, channels, and evaluation metrics.', de: 'Entwickelte einen Change-Kommunikationsplan mit Zeitplan, Kanälen und Erfolgskennzahlen.' },
+         { en: 'Focused on maintaining employee trust and clarity through organizational change.', de: 'Fokussierte auf den Erhalt von Vertrauen und Klarheit bei den Mitarbeitenden während des Wandels.' }]),
+      P('internal-communication-from-the-perspective-of-organizationa.jpg', 1750, 984,
+        { en: 'Individual Presentation', de: 'Einzelpräsentation' },
+        { en: 'Internal Communication & Organizational Psychology', de: 'Interne Kommunikation & Organisationspsychologie' },
+        { en: 'Solo presentation on internal communication theory', de: 'Eigenständiger Vortrag zur Theorie interner Kommunikation' },
+        [{ en: 'Reviewed literature connecting internal communication to organizational psychology, focusing on how transparent, two-way communication builds credibility, trust, and employee well-being.', de: 'Analysierte Fachliteratur zum Zusammenhang von interner Kommunikation und Organisationspsychologie, mit Fokus darauf, wie transparente, wechselseitige Kommunikation Glaubwürdigkeit, Vertrauen und das Wohlbefinden der Mitarbeitenden stärkt.' },
+         { en: 'Outlined practical implications across leadership, the internal communications function, and peer-level communication, grounded in psychological safety, Social Identity Theory, and Self-Determination Theory.', de: 'Skizzierte praktische Implikationen für Führung, die interne Kommunikationsfunktion und die Kommunikation auf Peer-Ebene, basierend auf psychologischer Sicherheit, der Social Identity Theory und der Self-Determination Theory.' }]),
+      P('nike-reputation-analysis-title-slide.jpg', 1750, 984,
+        { en: 'Reputation & PR', de: 'Reputation & PR' },
+        { en: 'Nike — Reputation Analysis', de: 'Nike — Reputationsanalyse' },
+        { en: 'Brand reputation through the Theory of Publics', de: 'Markenreputation aus der Perspektive der Theory of Publics' },
+        [{ en: "Analyzed Nike's brand identity, core values, and target groups (customers, law/decision-makers, general public), mapping them using the Theory of Publics.", de: 'Analysierte Nikes Markenidentität, Grundwerte und Zielgruppen (Kund:innen, Gesetzgeber:innen/Entscheidungsträger:innen, Öffentlichkeit) und ordnete sie mithilfe der Theory of Publics ein.' },
+         { en: 'Applied the framework to the Colin Kaepernick campaign to evaluate reputational risk and payoff.', de: 'Wendete das Modell auf die Colin-Kaepernick-Kampagne an, um Reputationsrisiko und -nutzen zu bewerten.' }])
+    ]
+  },
+  {
+    n: '2', color: '#ecd6a8', deep: '#c9a24b', landmark: 'flag',
+    title: { en: 'Brand Strategy & Positioning', de: 'Markenstrategie & Positionierung' },
+    intro: { en: 'Where a brand stands and where it could go: market analysis, positioning against competitors, co-creation with the public, and taking a brand into a new market.',
+             de: 'Wo eine Marke steht und wohin sie gehen kann: Marktanalyse, Positionierung gegenüber dem Wettbewerb, Co-Creation mit der Öffentlichkeit und der Eintritt in neue Märkte.' },
+    projects: [
+      P('about-you-strategy-presentation-title-slide.jpg', 1750, 984,
+        { en: 'Strategic Analysis', de: 'Strategische Analyse' },
+        { en: 'ABOUT YOU — Market Strategy', de: 'ABOUT YOU — Marktstrategie' },
+        { en: "Strategic analysis of a fashion e-tailer's market position", de: 'Strategische Analyse der Marktposition eines Modehändlers' },
+        [{ en: "Applied PESTLE, Porter's Five Forces, and VRIO frameworks to assess ABOUT YOU's competitive position.", de: 'Wendete PESTLE-, Porters-Five-Forces- und VRIO-Modelle an, um die Wettbewerbsposition von ABOUT YOU zu bewerten.' },
+         { en: 'Developed market-entry recommendations based on a SWOT/TOWS analysis.', de: 'Entwickelte Markteintrittsempfehlungen auf Basis einer SWOT-/TOWS-Analyse.' }]),
+      P('haidilao-positioning-analysis-title-slide.jpg', 1750, 984,
+        { en: 'Brand Positioning', de: 'Markenpositionierung' },
+        { en: 'Haidilao — Customer & Positioning Analysis', de: 'Haidilao — Kunden- & Positionierungsanalyse' },
+        { en: 'Why a hot-pot chain succeeds — positioning vs. Din Tai Fung', de: 'Warum eine Hot-Pot-Kette erfolgreich ist — Positionierung im Vergleich zu Din Tai Fung' },
+        [{ en: 'Built a segmentation-targeting-positioning (STP) analysis comparing Haidilao to Din Tai Fung.', de: 'Erstellte eine STP-Analyse (Segmentierung, Targeting, Positionierung) im Vergleich zu Din Tai Fung.' },
+         { en: "Analyzed customer experience drivers behind Haidilao's service-led success.", de: 'Analysierte die Customer-Experience-Faktoren hinter Haidilaos serviceorientiertem Erfolg.' }]),
+      P('lego-ideas-co-creation-platform-title-slide.jpg', 1750, 984,
+        { en: 'Legitimacy & Trust', de: 'Legitimität & Vertrauen' },
+        { en: 'LEGO Ideas — Co-Creation Platform', de: 'LEGO Ideas — Co-Creation-Plattform' },
+        { en: 'Why LEGO opens up product development to the public', de: 'Warum LEGO die Produktentwicklung für die Öffentlichkeit öffnet' },
+        [{ en: 'Analyzed LEGO Ideas through participatory culture and co-creation theory, tracing how public involvement (idea submission, voting, review) builds legitimacy and trust.', de: 'Analysierte LEGO Ideas anhand von Participatory-Culture- und Co-Creation-Theorie und zeigte, wie öffentliche Beteiligung (Ideeneinreichung, Abstimmung, Review) Legitimität und Vertrauen aufbaut.' },
+         { en: 'Presented individually on the strategic value of public co-creation, including access to diverse ideas, market testing, community engagement, and long-term brand loyalty.', de: 'Präsentierte eigenständig den strategischen Wert öffentlicher Co-Creation, einschließlich Zugang zu vielfältigen Ideen, Markttests, Community-Engagement und langfristiger Markentreue.' }]),
+      P('krombacher-radler-multicultural-marketing-title-slide.jpg', 1750, 984,
+        { en: 'Market Entry', de: 'Markteintritt' },
+        { en: 'Krombacher Radler — Bringing a German Beer Brand to Taiwan', de: 'Krombacher Radler — Eine deutsche Biermarke nach Taiwan bringen' },
+        { en: 'Marketing project exploring brand positioning in a competitive market', de: 'Marketingprojekt zur Markenpositionierung in einem wettbewerbsintensiven Markt' },
+        [{ en: 'Developed a marketing concept for introducing Krombacher Radler, a German beer-lemonade beverage, to the Taiwanese market.', de: 'Entwickelte ein Marketingkonzept zur Einführung von Krombacher Radler, einem deutschen Bier-Zitronenlimonade-Getränk, auf dem taiwanischen Markt.' },
+         { en: "Identified positioning, brand adaptation, and go-to-market strategy within Taiwan's existing, competitive Radler/RTD beverage category.", de: 'Erarbeitete Positionierung, Markenanpassung und Markteintrittsstrategie innerhalb der bestehenden, wettbewerbsintensiven Radler-/RTD-Getränkekategorie in Taiwan.' }])
+    ]
+  },
+  {
+    n: '3', color: '#cfe0d1', deep: '#7fa688', landmark: 'phone',
+    title: { en: 'Digital & Social Media', de: 'Digital & Social Media' },
+    intro: { en: 'Building a brand online: integrated digital strategy across SEO, content, and CRM, and a social-first launch for a Gen Z audience.',
+             de: 'Markenaufbau im Netz: integrierte Digitalstrategie über SEO, Content und CRM sowie ein Social-first-Launch für eine Gen-Z-Zielgruppe.' },
+    projects: [
+      P('neotaste-digital-marketing-strategy-title-slide.jpg', 1750, 984,
+        { en: 'Digital Strategy', de: 'Digitalstrategie' },
+        { en: 'NeoTaste — Agency Simulation', de: 'NeoTaste — Agentursimulation' },
+        { en: 'Holistic digital strategy for a German brand', de: 'Ganzheitliche Digitalstrategie für eine deutsche Marke' },
+        [{ en: 'Analyzed digital presence and developed an integrated digital strategy across SEO, social media, content, SEM, and CRM.', de: 'Analysierte die digitale Präsenz und entwickelte eine integrierte Digitalstrategie über SEO, Social Media, Content, SEM und CRM.' },
+         { en: 'Derived actionable measures and KPIs to optimize digital performance.', de: 'Leitete konkrete Maßnahmen und KPIs zur Optimierung der digitalen Performance ab.' }]),
+      P('bader-new-collection-campaign-title-slide.jpg', 1750, 984,
+        { en: 'Social Media Marketing', de: 'Social-Media-Marketing' },
+        { en: 'BADER — Social Media Relaunch', de: 'BADER — Social-Media-Relaunch' },
+        { en: 'Social media strategy for a new Gen Z sub-brand launch', de: 'Social-Media-Strategie für den Launch einer neuen Gen-Z-Submarke' },
+        [{ en: 'Developed a social media marketing strategy to support the launch of BADERYOUNG, a new sub-brand aimed at Gen Z women.', de: 'Entwickelte eine Social-Media-Marketingstrategie zur Unterstützung des Launches von BADERYOUNG, einer neuen Submarke für Gen-Z-Frauen.' },
+         { en: 'Focused on channel selection (Instagram, TikTok) and content approach to build audience engagement for the new brand.', de: 'Fokussierte auf Kanalauswahl (Instagram, TikTok) und Content-Ansatz, um das Engagement der Zielgruppe für die neue Marke aufzubauen.' }])
+    ]
+  },
+  {
+    n: '4', color: '#ebcbbd', deep: '#c4826b', landmark: 'office',
+    title: { en: 'Employer Branding & Audience Insight', de: 'Employer Branding & Zielgruppen-Insights' },
+    intro: { en: 'Starting from what the audience actually thinks: student surveys, personas, and user tests that turn into an employer branding campaign and a new campus concept.',
+             de: 'Ausgangspunkt ist, was die Zielgruppe wirklich denkt: Studierendenbefragungen, Personas und Nutzertests, aus denen eine Employer-Branding-Kampagne und ein neues Campus-Konzept entstehen.' },
+    projects: [
+      P('schwarz-group-company-project-title-slide.jpg', 1750, 984,
+        { en: 'Brand & Employer Branding', de: 'Marke & Employer Branding' },
+        { en: 'Schwarz Group Collaboration', de: 'Schwarz Gruppe Collaboration' },
+        { en: 'Brand awareness & employer branding among students', de: 'Markenbekanntheit & Employer Branding unter Studierenden' },
+        [{ en: 'Designed and promoted a student survey that reached 200+ clicks, analyzing 53 completed responses.', de: 'Konzipierte und bewarb eine Studierendenbefragung mit über 200 Klicks und analysierte 53 vollständige Antworten.' },
+         { en: 'Developed a targeted employer branding campaign tailored to a student audience.', de: 'Entwickelte eine zielgerichtete Employer-Branding-Kampagne für eine studentische Zielgruppe.' }]),
+      P('mix-and-match-buffet-canteen-project-title-slide.jpg', 1750, 984,
+        { en: 'Communication Tools Project', de: 'Kommunikationstools-Projekt' },
+        { en: 'Mix & Match — HS Pforzheim Canteen', de: 'Mix & Match — Mensa der HS Pforzheim' },
+        { en: 'A build-your-own buffet concept to improve the campus dining experience', de: 'Ein Build-your-own-Buffet-Konzept zur Verbesserung des Mensa-Erlebnisses' },
+        [{ en: "Designed and user-tested a mix-and-match buffet concept — letting students choose their own combination of carbs, protein, and veggies, with pricing based on portion/selection — to address the campus canteen's biggest pain point (lack of variety, cited by ~21% of survey respondents as the top fix).", de: 'Entwickelte und testete mit Nutzenden ein Mix-and-Match-Buffet-Konzept — bei dem Studierende ihre eigene Kombination aus Kohlenhydraten, Protein und Gemüse wählen, mit Preisgestaltung nach Portion/Auswahl —, um das größte Problem der Mensa zu lösen (mangelnde Abwechslung, von rund 21 % der Befragten als wichtigste Verbesserung genannt).' },
+         { en: 'Backed by a 79-respondent student survey, a target persona, structured ideation (6-3-5, mind mapping), a prototyped user journey, and "thinking out loud" interviews to validate the concept.', de: 'Gestützt auf eine Studierendenbefragung mit 79 Teilnehmenden, eine Zielpersona, strukturierte Ideenfindung (6-3-5-Methode, Mind Mapping), eine prototypische User Journey sowie „Thinking-Out-Loud“-Interviews zur Validierung des Konzepts.' }])
+    ]
+  },
+  {
+    n: '5', color: '#d6d0e6', deep: '#8a7fb0', landmark: 'chart',
+    title: { en: 'Research & Data', de: 'Forschung & Daten' },
+    intro: { en: 'Numbers behind the story: quantitative content analysis, survey statistics in SPSS and Tableau, and a sales forecast for a real family business.',
+             de: 'Die Zahlen hinter der Geschichte: quantitative Inhaltsanalyse, Umfragestatistik mit SPSS und Tableau sowie eine Absatzprognose für ein echtes Familienunternehmen.' },
+    projects: [
+      P('research-project-status-quo-title-slide.jpg', 1750, 984,
+        { en: 'Empirical Research', de: 'Empirische Forschung' },
+        { en: 'Strategy Communication in German Annual Reports', de: 'Strategiekommunikation in deutschen Geschäftsberichten' },
+        { en: 'Ongoing content analysis across 73 companies', de: 'Laufende Inhaltsanalyse über 73 Unternehmen hinweg' },
+        [{ en: "Contributed to a quantitative content analysis of strategy communication in 73 German companies' annual reports.", de: 'Wirkte an einer quantitativen Inhaltsanalyse zur Strategiekommunikation in den Geschäftsberichten von 73 deutschen Unternehmen mit.' },
+         { en: 'Collaborated with a 5-person research team to build the coding scheme, and led the transfer and analysis of findings in SPSS.', de: 'Arbeitete in einem 5-köpfigen Forschungsteam am Aufbau des Codierschemas mit und leitete die Übertragung und Analyse der Ergebnisse in SPSS.' }]),
+      P('psychological-assessment-survey-title-slide.jpg', 1750, 984,
+        { en: 'Survey Research', de: 'Umfrageforschung' },
+        { en: 'Psychological Assessment Survey', de: 'Umfrage zur psychologischen Eignungsdiagnostik' },
+        { en: 'Group coursework — comparative study on Taiwanese vs. international students', de: 'Gruppenarbeit — Vergleichsstudie zu taiwanischen und internationalen Studierenden' },
+        [{ en: 'Contributed to a 4-person course project analyzing psychological differences between Taiwanese and international students (136 respondents), using validated scales (stress, future-anxiety, and "lying flat" motivation scales).', de: 'Wirkte an einem 4-köpfigen Kursprojekt mit, das psychologische Unterschiede zwischen taiwanischen und internationalen Studierenden untersuchte (136 Befragte), unter Verwendung validierter Skalen (Stress, Zukunftsangst und „Lying-Flat“-Motivationsskala).' },
+         { en: 'Led the survey design and data collection, with a specific focus on the international-student sample.', de: 'Leitete das Umfragedesign und die Datenerhebung, mit besonderem Fokus auf die Stichprobe internationaler Studierender.' },
+         { en: 'Ran the statistical analysis in SPSS (ANOVA, Pearson correlation) and built visualizations in Tableau.', de: 'Führte die statistische Analyse in SPSS durch (ANOVA, Pearson-Korrelation) und erstellte Visualisierungen in Tableau.' }]),
+      P('photo-of-minsheng-chinese-medicine-pharmacy-storefront.jpg', 1750, 984,
+        { en: 'Location Strategy', de: 'Standortstrategie' },
+        { en: '民生中藥房 (Minsheng Chinese Pharmacy) — Location & Operations Strategy', de: '民生中藥房 (Minsheng-Apotheke) — Standort- & Betriebsstrategie' },
+        { en: "Comparing store locations for my family's Chinese medicine pharmacy", de: 'Standortvergleich für die Chinesische-Medizin-Apotheke meiner Familie' },
+        [{ en: "Analyzed store environment, target clientele, and product mix for my family's pharmacy in Yangmei, Taiwan.", de: 'Analysierte Standortumfeld, Zielkundschaft und Produktsortiment der Apotheke meiner Familie in Yangmei, Taiwan.' },
+         { en: 'Built a sales forecast and a cost-volume/break-even analysis comparing the old and new store locations to guide the relocation decision.', de: 'Erstellte eine Absatzprognose sowie eine Kosten-Volumen- und Break-Even-Analyse zum Vergleich von altem und neuem Standort als Entscheidungsgrundlage für den Umzug.' }])
+    ]
+  },
+  {
+    n: '6', color: '#d3e4e7', deep: '#6aa0a8', landmark: 'bridge',
+    title: { en: 'Intercultural & Events', de: 'Interkulturelles & Events' },
+    intro: { en: 'Bringing people together across cultures and clubs: a Taiwan–Germany comparison, a three-club welcome event I co-hosted, and a sustainability swap event.',
+             de: 'Menschen über Kulturen und Clubs hinweg zusammenbringen: ein Taiwan-Deutschland-Vergleich, ein clubübergreifendes Willkommensevent, das ich mitmoderiert habe, und ein nachhaltiges Tauschevent.' },
+    projects: [
+      P('taiwan-and-germany-comparison-title-slide.jpg', 1750, 984,
+        { en: 'Intercultural Comparison', de: 'Interkultureller Vergleich' },
+        { en: 'Taiwan vs. Germany — A Cultural Comparison', de: 'Taiwan vs. Deutschland — Ein Kulturvergleich' },
+        { en: 'Comparing two cultures across categories that matter to daily and business life', de: 'Vergleich zweier Kulturen anhand von Kategorien mit Relevanz für Alltag und Wirtschaft' },
+        [{ en: 'Compared Taiwan and Germany across categories including education, language, and business etiquette.', de: 'Verglich Taiwan und Deutschland in Kategorien wie Bildung, Sprache und Geschäftsetikette.' },
+         { en: 'Drew on personal experience living and studying in Taiwan at the time, plus input from some German friends and online research for the Germany side.', de: 'Stützte sich auf persönliche Erfahrungen aus Leben und Studium in Taiwan zu dieser Zeit, ergänzt durch den Austausch mit deutschen Freunden und Online-Recherche für die deutsche Seite.' }]),
+      P('cross-club-welcome-event-slide.jpg', 1072, 1527,
+        { en: 'Event Coordination', de: 'Eventkoordination' },
+        { en: '鋼管弦 — Cross-Club Collaboration', de: '鋼管弦 — Clubübergreifende Zusammenarbeit' },
+        { en: 'An event bringing three student clubs together (Piano Club, Wind Band, String Club)', de: 'Ein Event, das drei Studierendenclubs zusammenbrachte (Klavierclub, Blasorchester, Streicherclub)' },
+        [{ en: 'Designed the event slide deck and authored the Task Allocation Table, coordinating task assignments across ~15 crew members and three collaborating clubs.', de: 'Gestaltete das Event-Foliendeck und erstellte die Aufgabenverteilungstabelle, die die Aufgaben von rund 15 Crew-Mitgliedern und drei beteiligten Clubs koordinierte.' },
+         { en: 'Emceed the event alongside a co-host, guiding program segments (club intros/performances, games) and cueing transitions between them in real time.', de: 'Moderierte die Veranstaltung gemeinsam mit einer Co-Moderatorin, leitete durch die Programmabschnitte (Clubvorstellungen/Auftritte, Spiele) und steuerte die Übergänge in Echtzeit.' }]),
+      P('ebba-2023-eco-exchange-event-poster.jpg', 1750, 984,
+        { en: 'Event Marketing', de: 'Event-Marketing' },
+        { en: 'EBBA Eco-Exchange — Secondhand Swap Event', de: 'EBBA Eco-Exchange — Secondhand-Tauschevent' },
+        { en: 'A sustainability campaign and event execution, as part of the marketing team', de: 'Eine Nachhaltigkeitskampagne und Event-Durchführung, als Teil des Marketing-Teams' },
+        [{ en: 'Designed campaign materials (posters, fliers) for a secondhand-goods exchange event.', de: 'Gestaltete Kampagnenmaterialien (Plakate, Flyer) für ein Secondhand-Tauschevent.' },
+         { en: 'Coordinated outreach and on-the-ground promotion, then evaluated results in a post-event retro.', de: 'Koordinierte Öffentlichkeitsarbeit und Vor-Ort-Promotion und wertete die Ergebnisse in einem Post-Event-Retro aus.' }])
+    ]
+  }
+];
+
+/* B. HELPERS + LANGUAGE ------------------------------------------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+const ss = {
+  get(k) { try { return sessionStorage.getItem('pi.' + k); } catch { return null; } },
+  set(k, v) { try { sessionStorage.setItem('pi.' + k, v); } catch {} }
+};
+
+const state = { lang: 'en', lowStim: false, textMode: false, selected: -1, hover: -1, focus: -1, scene: null };
+
+// Same rule as the main portfolio (shares its saved 'lang' choice on the same site)
+function initialLang() {
+  const saved = ls.get('lang');
+  if (saved === 'en' || saved === 'de') return saved;
+  const nav = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+  return nav.toLowerCase().startsWith('de') ? 'de' : 'en';
+}
+const L = o => o[state.lang] ?? o.en;
+const UI = {
+  island: { en: 'Island', de: 'Insel' },
+  projects: { en: 'projects', de: 'Projekte' },
+  details: { en: 'Details', de: 'Details' },
+  listView: { en: 'List view', de: 'Listenansicht' },
+  view3d: { en: '3D view', de: '3D-Ansicht' },
+  explore: { en: 'Press Enter to explore.', de: 'Enter drücken zum Erkunden.' },
+  fullSite: { en: 'See all projects on the main portfolio page →', de: 'Alle Projekte auf der Portfolio-Hauptseite ansehen →' },
+  noWebgl: { en: "Your device can't show the 3D islands, so here is the list view with the same content.", de: 'Dein Gerät kann die 3D-Inseln nicht anzeigen, daher siehst du hier die Listenansicht mit denselben Inhalten.' },
+  noLoad: { en: "The 3D view couldn't load (maybe you are offline), so here is the list view with the same content.", de: 'Die 3D-Ansicht konnte nicht geladen werden (vielleicht bist du offline), daher siehst du hier die Listenansicht mit denselben Inhalten.' }
+};
+
+function applyLang(lang, save) {
+  state.lang = lang;
+  if (save) ls.set('lang', lang);
+  document.documentElement.lang = lang;
+  $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  $$('[data-en]').forEach(el => { el.textContent = el.dataset[lang] ?? el.dataset.en; });
+  $$('[data-en-html]').forEach(el => { el.innerHTML = lang === 'de' ? el.dataset.deHtml : el.dataset.enHtml; });
+  document.title = lang === 'de' ? 'Elsa Fan — Projektinseln' : 'Elsa Fan — Project Islands';
+  $('#textModeBtn').textContent = L(state.textMode ? UI.view3d : UI.listView);
+  renderTextList();
+  state.scene?.renderLabels();
+  if (state.selected >= 0) renderPanel(state.selected);
+}
+$$('[data-lang]').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang, true)));
+
+/* C. PANEL --------------------------------------------------------------- */
+const panel = $('#panel'), panelBody = $('#panelBody'), panelTitle = $('#panelTitle'), panelChip = $('#panelChip');
+
+function renderPanel(i) {
+  const isl = ISLANDS[i];
+  panelChip.textContent = `${L(UI.island)} ${isl.n} · ${isl.projects.length} ${L(UI.projects)}`;
+  panelChip.style.background = isl.color;
+  panelTitle.textContent = L(isl.title);
+  panelBody.innerHTML = `
+    <p class="intro">${esc(L(isl.intro))}</p>
+    ${isl.projects.map(p => `
+      <article class="proj">
+        <img src="images/${p.img}" width="${p.w}" height="${p.h}" alt="${esc(L(p.title))}" loading="lazy">
+        <div class="proj-body">
+          <span class="tag">${esc(L(p.tag))}</span>
+          <h3>${esc(L(p.title))}</h3>
+          <p class="sub">${esc(L(p.sub))}</p>
+          <details><summary>${esc(L(UI.details))}</summary>
+            <ul>${p.bullets.map(b => `<li>${esc(L(b))}</li>`).join('')}</ul>
+          </details>
+        </div>
+      </article>`).join('')}
+    <p class="panel-foot"><a href="./#projects">${esc(L(UI.fullSite))}</a></p>`;
+}
+
+function openIsland(i) {
+  state.selected = i;
+  renderPanel(i);
+  panelBody.scrollTop = 0;
+  panel.classList.add('open');
+  document.body.classList.add('panel-open');
+  hideHint();
+  if (state.scene && !state.textMode) state.scene.flyToIsland(i);
+  setTimeout(() => panelTitle.focus({ preventScroll: true }), state.lowStim ? 0 : 50);
+}
+function closeIsland() {
+  if (state.selected < 0) return;
+  const i = state.selected;
+  state.selected = -1;
+  panel.classList.remove('open');
+  document.body.classList.remove('panel-open');
+  if (state.scene && !state.textMode) state.scene.flyToOverview();
+  const target = state.textMode ? $(`#textList [data-index="${i}"]`) : $(`#labels [data-index="${i}"]`);
+  target?.focus({ preventScroll: true });
+}
+$('#closeBtn').addEventListener('click', closeIsland);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.selected >= 0) { e.preventDefault(); closeIsland(); } });
+
+/* D. CALM MODE, LIST VIEW, HINT ----------------------------------------- */
+const lowStimBtn = $('#lowStimBtn'), textModeBtn = $('#textModeBtn');
+const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+function setLowStim(on) {
+  state.lowStim = on;
+  document.documentElement.classList.toggle('low-stim', on);
+  lowStimBtn.setAttribute('aria-checked', String(on));
+  ss.set('lowStim', on ? '1' : '0');
+  state.scene?.applyLowStim(on);
+}
+lowStimBtn.addEventListener('click', () => setLowStim(!state.lowStim));
+const savedLow = ss.get('lowStim');
+setLowStim(savedLow !== null ? savedLow === '1' : rm.matches);
+
+const textList = $('#textList');
+function renderTextList() {
+  textList.innerHTML = ISLANDS.map((isl, i) => `
+    <li><button class="island-item" type="button" data-index="${i}">
+      <span class="badge" style="background:${isl.color}" aria-hidden="true">${isl.n}</span>
+      <span>${esc(L(isl.title))}<small>${isl.projects.map(p => esc(L(p.title).split(' — ')[0])).join(' · ')}</small></span>
+    </button></li>`).join('');
+}
+textList.addEventListener('click', e => { const b = e.target.closest('[data-index]'); if (b) openIsland(+b.dataset.index); });
+
+function setTextMode(on, { focusList = false } = {}) {
+  state.textMode = on;
+  document.body.classList.toggle('text-mode', on);
+  textModeBtn.setAttribute('aria-pressed', String(on));
+  textModeBtn.textContent = L(on ? UI.view3d : UI.listView);
+  ss.set('textMode', on ? '1' : '0');
+  if (!on && state.scene) state.scene.syncCamera();
+  if (on && focusList) $('#textMenuTitle').focus();
+}
+textModeBtn.addEventListener('click', () => setTextMode(!state.textMode, { focusList: !state.textMode }));
+$('#skipLink').addEventListener('click', () => setTextMode(true, { focusList: true }));
+
+const hint = $('#hint');
+function hideHint() {
+  if (hint.hidden) return;
+  ss.set('hintSeen', '1');
+  if (state.lowStim) { hint.hidden = true; return; }
+  hint.classList.add('fade');
+  setTimeout(() => { hint.hidden = true; }, 1300);
+}
+$('#hintBtn').addEventListener('click', hideHint);
+
+function showFallback(reason) {
+  $('#loading').hidden = true;
+  const n = $('#fallbackNotice');
+  n.hidden = false;
+  n.textContent = L(reason === 'webgl' ? UI.noWebgl : UI.noLoad);
+  textModeBtn.hidden = true;
+  $('#skipLink').hidden = true;
+  setTextMode(true);
+}
+
+applyLang(initialLang(), false);
+if (ss.get('textMode') === '1') setTextMode(true);
+
+/* E. 3D SCENE ------------------------------------------------------------ */
+function hasWebGL() {
+  try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); }
+  catch { return false; }
+}
+
+async function init3D() {
+  if (!hasWebGL()) { showFallback('webgl'); return; }
+  let THREE, OrbitControls;
+  try {
+    THREE = await import('three');
+    ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+  } catch { showFallback('load'); return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }); }
+  catch { showFallback('webgl'); return; }
+
+  const container = $('#scene');
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const FLAT_BG = new THREE.Color('#f6f2e9');
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 400);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  Object.assign(controls, { enableDamping: true, dampingFactor: 0.06, enablePan: false, minDistance: 4, maxDistance: 38, minPolarAngle: 0.25, maxPolarAngle: 1.42, rotateSpeed: 0.6, zoomSpeed: 0.8 });
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb0, 1.6));
+  const sun = new THREE.DirectionalLight(0xfff4e0, 1.5);
+  sun.position.set(8, 14, 10);
+  scene.add(sun);
+
+  function radialTexture(inner, outer, size = 128) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d');
+    const grd = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    grd.addColorStop(0, inner); grd.addColorStop(1, outer);
+    g.fillStyle = grd; g.fillRect(0, 0, size, size);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+  function cloudTexture() {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    const g = c.getContext('2d');
+    [[70, 76, 42], [120, 60, 52], [175, 76, 40], [128, 86, 46]].forEach(([x, y, r]) => {
+      const grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, 'rgba(255,255,255,0.9)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grd; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    });
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+
+  // Sky: soft blue-grey at the top, cream in the middle, warm sand at the horizon
+  const hexToVec = h => { const c = parseInt(h.slice(1), 16); return new THREE.Vector3(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255); };
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(150, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: { top: { value: hexToVec('#b8c4dc') }, mid: { value: hexToVec('#f6f2e9') }, low: { value: hexToVec('#eadbbd') } },
+    vertexShader: `varying float vY; void main(){ vY = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform vec3 top; uniform vec3 mid; uniform vec3 low; varying float vY;
+      void main(){ vec3 c = vY > 0.0 ? mix(mid, top, smoothstep(0.0, 0.6, vY)) : mix(mid, low, smoothstep(0.0, 0.5, -vY)); gl_FragColor = vec4(c, 1.0); }`
+  }));
+  scene.add(sky);
+
+  const clouds = new THREE.Group();
+  const cloudMat = new THREE.SpriteMaterial({ map: cloudTexture(), transparent: true, opacity: 0.7, depthWrite: false });
+  for (let i = 0; i < 12; i++) {
+    const s = new THREE.Sprite(cloudMat);
+    const a = (i / 12) * Math.PI * 2 + Math.random() * 0.4, r = 30 + Math.random() * 25;
+    s.position.set(Math.cos(a) * r, -4 + Math.random() * 14, Math.sin(a) * r);
+    const k = 10 + Math.random() * 8; s.scale.set(k, k / 2, 1);
+    clouds.add(s);
+  }
+  scene.add(clouds);
+
+  const sea = new THREE.Mesh(new THREE.CircleGeometry(34, 48),
+    new THREE.MeshBasicMaterial({ map: radialTexture('rgba(176,196,226,0.7)', 'rgba(176,196,226,0)'), transparent: true, depthWrite: false }));
+  sea.rotation.x = -Math.PI / 2; sea.position.y = -5.5;
+  scene.add(sea);
+  const shadowTex = radialTexture('rgba(19,35,66,0.28)', 'rgba(19,35,66,0)', 64);
+
+  const matCache = new Map();
+  const mat = color => {
+    if (!matCache.has(color)) matCache.set(color, new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: true }));
+    return matCache.get(color);
+  };
+  const mesh = (geo, color, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat(color)); m.position.set(x, y, z); return m; };
+  function jitter(geo, amount) {
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const h = Math.sin(Math.round(x * 100) * 12.9898 + Math.round(y * 100) * 78.233 + Math.round(z * 100) * 37.719) * 43758.5453;
+      const n = (h - Math.floor(h)) - 0.5;
+      p.setXYZ(i, x * (1 + n * amount), y, z * (1 + n * amount));
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  const NAVY = '#132342', CREAM = '#fbf8f2', BRASS = '#c9a24b';
+  const spinners = [];
+  const LANDMARKS = {
+    // 1: lighthouse — clear signals, especially in a storm
+    lighthouse(isl) {
+      const g = new THREE.Group();
+      g.add(mesh(new THREE.CylinderGeometry(0.3, 0.42, 0.18, 12), '#d9cfbb', 0, 0.09, 0));
+      [0, 1, 2].forEach(k => g.add(mesh(new THREE.CylinderGeometry(0.27 - k * 0.04, 0.31 - k * 0.04, 0.34, 12), k % 2 ? isl.deep : CREAM, 0, 0.35 + k * 0.34, 0)));
+      g.add(mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.06, 12), NAVY, 0, 1.2, 0));
+      const lamp = new THREE.Group(); lamp.position.y = 1.36;
+      lamp.add(mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.26, 10), '#ffe7a3'));
+      const beam = mesh(new THREE.BoxGeometry(0.9, 0.06, 0.06), '#fff3c8'); lamp.add(beam);
+      g.add(lamp); spinners.push(lamp);
+      g.add(mesh(new THREE.ConeGeometry(0.22, 0.26, 12), NAVY, 0, 1.62, 0));
+      return g;
+    },
+    // 2: flag on a podium — where a brand stands
+    flag(isl) {
+      const g = new THREE.Group();
+      g.add(mesh(new THREE.BoxGeometry(0.9, 0.22, 0.6), CREAM, 0, 0.11, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.6, 0.18, 0.45), isl.deep, 0, 0.31, 0));
+      g.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.3, 6), NAVY, 0, 1.05, 0));
+      g.add(mesh(new THREE.SphereGeometry(0.06, 8, 6), BRASS, 0, 1.72, 0));
+      const flag = mesh(new THREE.BoxGeometry(0.55, 0.34, 0.03), isl.deep, 0.29, 1.48, 0); g.add(flag);
+      g.add(mesh(new THREE.BoxGeometry(0.2, 0.06, 0.035), CREAM, 0.29, 1.48, 0));
+      return g;
+    },
+    // 3: smartphone with a "like" bubble
+    phone(isl) {
+      const g = new THREE.Group();
+      const body = mesh(new THREE.BoxGeometry(0.62, 1.1, 0.1), NAVY, 0, 0.62, 0); body.rotation.x = -0.12; g.add(body);
+      const screen = mesh(new THREE.BoxGeometry(0.52, 0.9, 0.02), isl.color, 0, 0.63, 0.06); screen.rotation.x = -0.12; g.add(screen);
+      [0.85, 0.65, 0.45].forEach((y, k) => { const b = mesh(new THREE.BoxGeometry(k === 1 ? 0.3 : 0.38, 0.1, 0.02), CREAM, k === 1 ? -0.05 : 0, y, 0.08 - (y - 0.62) * 0.12); b.rotation.x = -0.12; g.add(b); });
+      const bubble = new THREE.Group(); bubble.position.set(0.48, 1.25, 0.1);
+      bubble.add(mesh(new THREE.SphereGeometry(0.2, 12, 10), '#e58a8a'));
+      bubble.add(mesh(new THREE.SphereGeometry(0.07, 8, 6), CREAM, -0.045, 0.03, 0.17));
+      bubble.add(mesh(new THREE.SphereGeometry(0.07, 8, 6), CREAM, 0.045, 0.03, 0.17));
+      g.add(bubble); spinners.push(bubble);
+      return g;
+    },
+    // 4: small office building with lit windows
+    office(isl) {
+      const g = new THREE.Group();
+      g.add(mesh(new THREE.BoxGeometry(0.7, 1.15, 0.6), CREAM, -0.1, 0.58, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.45, 0.7, 0.5), isl.deep, 0.45, 0.35, 0.02));
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) g.add(mesh(new THREE.BoxGeometry(0.16, 0.16, 0.02), r === 1 && c === 0 ? '#ffe7a3' : '#9fb3d1', -0.24 + c * 0.28, 0.35 + r * 0.3, 0.31));
+      g.add(mesh(new THREE.BoxGeometry(0.16, 0.3, 0.02), NAVY, 0.45, 0.15, 0.28));
+      g.add(mesh(new THREE.BoxGeometry(0.74, 0.06, 0.64), NAVY, -0.1, 1.18, 0));
+      return g;
+    },
+    // 5: bar chart and a magnifying glass
+    chart(isl) {
+      const g = new THREE.Group();
+      [0.45, 0.75, 0.6, 1.05].forEach((h, k) => g.add(mesh(new THREE.BoxGeometry(0.2, h, 0.2), k === 3 ? isl.deep : CREAM, -0.39 + k * 0.26, h / 2, 0)));
+      const glass = new THREE.Group(); glass.position.set(0.35, 1.05, 0.35); glass.rotation.z = -0.6;
+      glass.add(mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 20), NAVY));
+      glass.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.38, 6), BRASS, 0, -0.38, 0));
+      g.add(glass);
+      return g;
+    },
+    // 6: arched bridge between two different-coloured flags
+    bridge(isl) {
+      const g = new THREE.Group();
+      const arch = mesh(new THREE.TorusGeometry(0.62, 0.08, 6, 20, Math.PI), isl.deep, 0, 0, 0); g.add(arch);
+      g.add(mesh(new THREE.BoxGeometry(1.5, 0.06, 0.32), CREAM, 0, 0.62, 0));
+      [-0.7, 0.7].forEach((x, k) => {
+        g.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.6, 6), NAVY, x, 0.95, 0));
+        g.add(mesh(new THREE.BoxGeometry(0.3, 0.2, 0.025), k ? '#c4826b' : '#6f86ad', x + (k ? -0.16 : 0.16), 1.13, 0));
+      });
+      return g;
+    }
+  };
+
+  const RING_RADIUS = 8.5;
+  const islands = [], pickables = [];
+  const labelsEl = $('#labels');
+  const glowTex = radialTexture('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)');
+
+  ISLANDS.forEach((isl, i) => {
+    const angle = THREE.MathUtils.degToRad(-30 + i * 60);
+    const scale = [1.05, 1.05, 0.92, 0.92, 1, 1][i];
+    const r = 1.7 * scale;
+    const base = new THREE.Vector3(Math.sin(angle) * RING_RADIUS, [0, 0.6, -0.3, 0.45, -0.4, 0.25][i], Math.cos(angle) * RING_RADIUS);
+    const dir = new THREE.Vector3(base.x, 0, base.z).normalize();
+    const group = new THREE.Group();
+    group.position.copy(base);
+
+    const rockGeo = jitter(new THREE.ConeGeometry(r * 0.95, r * 1.5, 9, 3), 0.18);
+    rockGeo.rotateX(Math.PI); rockGeo.translate(0, -r * 0.75 - 0.05, 0);
+    group.add(new THREE.Mesh(rockGeo, mat('#d3c8b2')));
+    group.add(mesh(new THREE.CylinderGeometry(r, r * 0.95, 0.24, 22), '#a88f72', 0, -0.17, 0));
+    const dome = mesh(new THREE.SphereGeometry(r, 22, 10, 0, Math.PI * 2, 0, Math.PI / 2), isl.color, 0, -0.05, 0);
+    dome.scale.y = 0.28; group.add(dome);
+
+    const domeY = d => 0.28 * r * Math.sqrt(Math.max(0, 1 - (d / r) ** 2)) - 0.05;
+    for (let k = 0; k < 3; k++) {
+      const a = angle + 2.2 + k * 1.15, d = r * 0.66;
+      const tx = Math.sin(a) * d, tz = Math.cos(a) * d, ty = domeY(d);
+      group.add(mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.22, 6), '#9b7b60', tx, ty + 0.1, tz));
+      const leaf = k % 2 ? new THREE.ConeGeometry(0.24, 0.55, 7) : new THREE.IcosahedronGeometry(0.24, 0);
+      group.add(mesh(leaf, k % 2 ? '#9cbf9f' : '#b5cfa5', tx, ty + (k % 2 ? 0.48 : 0.4), tz));
+    }
+
+    const lm = LANDMARKS[isl.landmark](isl);
+    lm.position.y = domeY(0) - 0.05;
+    lm.rotation.y = Math.atan2(dir.x, dir.z);
+    group.add(lm);
+
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.08, 0.06, 8, 48),
+      new THREE.MeshBasicMaterial({ color: 0xc9a24b, transparent: true, opacity: 0, depthWrite: false }));
+    ring.rotation.x = Math.PI / 2; ring.position.y = -0.1;
+    group.add(ring);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(isl.color), transparent: true, opacity: 0, depthWrite: false }));
+    glow.scale.set(r * 4.4, r * 4.4, 1);
+    scene.add(glow);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(r * 1.3, 24), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.set(base.x, -5.45, base.z);
+    scene.add(shadow);
+
+    group.traverse(o => { if (o.isMesh && o !== ring) { o.userData.index = i; pickables.push(o); } });
+    scene.add(group);
+
+    const label = document.createElement('button');
+    label.type = 'button';
+    label.className = 'island-label';
+    label.dataset.index = i;
+    label.addEventListener('click', () => openIsland(i));
+    label.addEventListener('mouseenter', () => { state.hover = i; });
+    label.addEventListener('mouseleave', () => { if (state.hover === i) state.hover = -1; });
+    label.addEventListener('focus', () => { state.focus = i; });
+    label.addEventListener('blur', () => { if (state.focus === i) state.focus = -1; });
+    labelsEl.appendChild(label);
+
+    islands.push({ group, base, dir, r, phase: i * 1.1, ring, glow, label, hl: 0, labelY: 2.7 * scale });
+  });
+
+  function renderLabels() {
+    islands.forEach((it, i) => {
+      const isl = ISLANDS[i];
+      it.label.setAttribute('aria-label', `${L(UI.island)} ${isl.n}: ${L(isl.title)}, ${isl.projects.length} ${L(UI.projects)}. ${L(UI.explore)}`);
+      it.label.innerHTML = `<span class="badge" style="background:${isl.color}" aria-hidden="true">${isl.n}</span><span class="lbl-text" aria-hidden="true">${esc(L(isl.title))}</span>`;
+    });
+  }
+  renderLabels();
+
+  const OVERVIEW_TARGET = new THREE.Vector3(0, 0.3, 0);
+  function overviewPosition() {
+    const aspect = window.innerWidth / window.innerHeight;
+    const dist = aspect < 1 ? Math.min(36, 22 + (1 - aspect) * 22) : 22;
+    return new THREE.Vector3(0, dist * 0.5, dist);
+  }
+  function islandView(i) {
+    const it = islands[i];
+    return { pos: it.base.clone().addScaledVector(it.dir, 7).add(new THREE.Vector3(0, 3.2, 0)), target: it.base.clone().add(new THREE.Vector3(0, 0.6, 0)) };
+  }
+  const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  let flight = null;
+  function flyTo(pos, target) {
+    if (state.lowStim || state.textMode) { flight = null; camera.position.copy(pos); controls.target.copy(target); controls.update(); return; }
+    controls.enabled = false;
+    flight = { fromP: camera.position.clone(), toP: pos, fromT: controls.target.clone(), toT: target, t0: performance.now(), dur: 1500 };
+  }
+
+  const shift = { x: 0, y: 0 };
+  function targetShift() {
+    if (state.selected < 0) return { x: 0, y: 0 };
+    const rect = panel.getBoundingClientRect();
+    return window.innerWidth >= 820 ? { x: (rect.width + 16) / 2, y: 0 } : { x: 0, y: rect.height / 2 };
+  }
+  function applyShift() {
+    const W = window.innerWidth, H = window.innerHeight;
+    if (Math.abs(shift.x) < 0.5 && Math.abs(shift.y) < 0.5) camera.clearViewOffset();
+    else camera.setViewOffset(W, H, shift.x, shift.y, W, H);
+  }
+
+  const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const canvas = renderer.domElement;
+  function pick(e) {
+    const rect = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hit = raycaster.intersectObjects(pickables, false)[0];
+    return hit ? hit.object.userData.index : -1;
+  }
+  let down = null;
+  canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; hideHint(); });
+  canvas.addEventListener('pointerup', e => {
+    if (!down) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), quick = performance.now() - down.t < 600;
+    down = null;
+    if (moved < 6 && quick) { const i = pick(e); if (i >= 0) openIsland(i); }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || e.buttons) return;
+    const i = pick(e); state.hover = i; canvas.style.cursor = i >= 0 ? 'pointer' : 'grab';
+  });
+  canvas.addEventListener('pointerleave', () => { state.hover = -1; });
+  canvas.addEventListener('wheel', hideHint, { passive: true });
+
+  function applyLowStim(on) {
+    clouds.visible = sea.visible = sky.visible = !on;
+    scene.background = on ? FLAT_BG : null;
+    controls.enableDamping = !on;
+    islands.forEach(it => { it.glow.visible = !on; if (on) it.group.position.copy(it.base); });
+    if (on && flight) { camera.position.copy(flight.toP); controls.target.copy(flight.toT); flight = null; controls.enabled = true; }
+  }
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    applyShift();
+  });
+
+  const tmp = new THREE.Vector3(), camDir = new THREE.Vector3();
+  let last = performance.now();
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (state.textMode) return;
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const t = now / 1000, calm = state.lowStim;
+    if (!calm) {
+      islands.forEach(it => { it.group.position.y = it.base.y + Math.sin(t * 0.5 + it.phase) * 0.22; });
+      clouds.rotation.y += dt * 0.008;
+      spinners.forEach(s => { s.rotation.y += dt * 0.35; });
+    }
+    camera.getWorldDirection(camDir);
+    islands.forEach((it, i) => {
+      const want = (i === state.hover || i === state.focus || i === state.selected) ? 1 : 0;
+      it.hl = calm ? want : it.hl + (want - it.hl) * Math.min(1, dt * 4);
+      it.ring.material.opacity = it.hl * 0.9;
+      it.glow.material.opacity = it.hl * 0.7;
+      it.glow.position.copy(it.group.position).addScaledVector(camDir, 2.5);
+      it.label.classList.toggle('is-hot', want === 1);
+    });
+    if (flight) {
+      const k = ease(Math.min(1, (now - flight.t0) / flight.dur));
+      camera.position.lerpVectors(flight.fromP, flight.toP, k);
+      controls.target.lerpVectors(flight.fromT, flight.toT, k);
+      camera.lookAt(controls.target);
+      if (k >= 1) { flight = null; controls.enabled = true; controls.update(); }
+    } else controls.update();
+
+    const ts = targetShift(), f = calm ? 1 : Math.min(1, dt * 4);
+    const nx = shift.x + (ts.x - shift.x) * f, ny = shift.y + (ts.y - shift.y) * f;
+    if (Math.abs(nx - shift.x) > 0.1 || Math.abs(ny - shift.y) > 0.1 || calm) { shift.x = nx; shift.y = ny; applyShift(); }
+
+    renderer.render(scene, camera);
+
+    const W = window.innerWidth, H = window.innerHeight;
+    islands.forEach(it => {
+      tmp.copy(it.group.position); tmp.y += it.labelY; tmp.project(camera);
+      const visible = tmp.z < 1 && Math.abs(tmp.x) < 1.2 && Math.abs(tmp.y) < 1.2;
+      it.label.style.visibility = visible ? 'visible' : 'hidden';
+      if (visible) it.label.style.transform = `translate(${((tmp.x + 1) / 2) * W}px, ${((1 - tmp.y) / 2) * H}px) translate(-50%, -100%)`;
+    });
+  }
+
+  state.scene = {
+    flyToIsland(i) { const v = islandView(i); flyTo(v.pos, v.target); },
+    flyToOverview() { flyTo(overviewPosition(), OVERVIEW_TARGET.clone()); },
+    applyLowStim, renderLabels,
+    syncCamera() {
+      const v = state.selected >= 0 ? islandView(state.selected) : { pos: overviewPosition(), target: OVERVIEW_TARGET };
+      camera.position.copy(v.pos); controls.target.copy(v.target); controls.update();
+      last = performance.now();
+    }
+  };
+
+  camera.position.copy(overviewPosition()).multiplyScalar(1.35);
+  controls.target.copy(OVERVIEW_TARGET);
+  applyLowStim(state.lowStim);
+  if (state.selected >= 0) state.scene.syncCamera(); else state.scene.flyToOverview();
+  $('#loading').hidden = true;
+  if (ss.get('hintSeen') !== '1' && !state.textMode) { hint.hidden = false; setTimeout(hideHint, 12000); }
+  requestAnimationFrame(frame);
+}
+
+init3D();
+</script>
+</body>
+</html>

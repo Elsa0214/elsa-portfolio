@@ -1316,6 +1316,10 @@ h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
 }
 
 :focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
+.islands-link{margin:0 0 22px;}
+.islands-link a{display:inline-flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:600;color:var(--navy);text-decoration:none;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:var(--bg-card);transition:border-color .2s ease;}
+.islands-link a:hover{border-color:var(--brass);}
+.islands-link a span[aria-hidden]{color:var(--brass);}
 </style>
 </head>
 <body>
@@ -1625,6 +1629,7 @@ h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
     <!-- PROJECTS -->
     <section class="section reveal" id="projects">
       <div class="dept"><span class="dept-label"><svg class="icon" viewBox="0 0 18 18"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="10" y="2" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/></svg><span data-i18n="en">Academic Projects</span><span data-i18n="de" hidden>Akademische Projekte</span> <span>004</span></span></div>
+      <p class="islands-link"><a href="islands.html"><span aria-hidden="true">◐</span><span data-i18n="en">Explore my projects as 3D islands →</span><span data-i18n="de" hidden>Meine Projekte als 3D-Inseln erkunden →</span></a></p>
 
       <div class="cluster" data-accent="strategy">
         <button class="cluster__toggle" type="button" aria-expanded="false">
